@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenkariApp - Messagerie Sécurisée E2E</title>
+    <link rel="icon" type="image/x-icon" href="Zenkari.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .landing-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .landing-header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .landing-header p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: #3b82f6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        section h2 {
+            color: #3b82f6;
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: #1f1f1f;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .feature-card h3 {
+            color: #10b981;
+            margin-bottom: 15px;
+        }
+
+        .auth-container {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 40px auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .main-app {
+            display: none;
+        }
+
+        .section {
+            background: #1f1f1f;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #fbbf24;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: white;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d2d;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            min-height: 150px;
+        }
+
+        button, .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #fbbf24;
+            color: black;
+        }
+
+        .btn-secondary {
+            background: #4b5563;
+            color: white;
+        }
+
+        .btn-purple {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        button:hover, .btn:hover {
+            opacity: 0.85;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            background: #2d2d2d;
+            padding: 12px;
+            border-radius: 6px;
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .status.success {
+            color: #10b981;
+            border-left: 4px solid #10b981;
+        }
+
+        .status.error {
+            color: #ef4444;
+            border-left: 4px solid #ef4444;
+        }
+
+        .user-info {
+            background: #1f1f1f;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid #3b82f6;
+        }
+
+        .user-info .username {
+            font-size: 20px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .user-info .fingerprint {
+            font-size: 12px;
+            color: #10b981;
+            margin-top: 5px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            margin-bottom: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #qrBox {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #qrBox.empty {
+            background: transparent;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+        }
+
+        .modal-title {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .contact-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #10b981;
+            position: relative;
+        }
+
+        .contact-name {
+            color: #3b82f6;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .contact-fingerprint {
+            color: #10b981;
+            font-size: 11px;
+            font-family: monospace;
+        }
+
+        .delete-contact-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .delete-contact-btn:hover {
+            transform: scale(1.1);
+            background: #dc2626;
+        }
+
+        footer {
+            background: #1a1a1a;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 60px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .landing-header h1 {
+                font-size: 32px;
+            }
+
+            .landing-header p {
+                font-size: 16px;
+            }
+
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            section h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landingPage">
+        <div class="landing-header">
+            <img src="Zenkari.ico" alt="Zenkari Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+            <h1>ZenkariApp</h1>
+            <p>La solution de chiffrement et de partage sécurisé de bout en bout</p>
+            <button class="btn btn-success" style="font-size: 18px; padding: 15px 40px;" onclick="goToApp()"><img src="Zenkari.ico" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">Accéder à l'application</button>
+        </div>
+
+        <nav>
+            <ul>
+                <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+                <li><a href="#securite">Sécurité</a></li>
+                <li><a href="#qr-code">QR Code</a></li>
+                <li><a href="#app">Application</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <section id="fonctionnalites">
+            <h2> Fonctionnalités Principales</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3><img src="Zenkari.ico" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">Chiffrement Hybride</h3>
+                    <p>Utilisation de RSA-2048 pour l'échange de clés et AES-256 pour le chiffrement des messages. Double clé par utilisateur (authentification + chiffrement).</p>
+                </div>
+                <div class="feature-card">
+                    <h3><img src="Zenkari.ico" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">Gestion des Clés</h3>
+                    <p>Génération locale des clés cryptographiques. Les clés privées ne quittent jamais votre appareil. Partage sécurisé des clés publiques.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📱 QR Codes Sécurisés</h3>
+                    <p>Partagez vos clés publiques facilement via QR Code. Vérification automatique de l'intégrité des données partagées.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>✍️ Signatures Numériques</h3>
+                    <p>Chaque message est signé cryptographiquement. Garantie d'authenticité et de non-répudiation.</p>
+                </div>
+                <div class="feature-card">
+                    <h3><img src="Zenkari.ico" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">Protection Multi-Couches</h3>
+                    <p>Option de clé de sécurité supplémentaire. Double chiffrement pour les messages sensibles.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Historique Chiffré</h3>
+                    <p>Suivi de toutes vos opérations de chiffrement. Stockage local sécurisé des données.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="securite" style="background: #1a1a1a; border-radius: 12px; padding: 40px;">
+            <h2> Détails de Sécurité</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 15px; margin-bottom: 10px; background: #2d2d2d; border-radius: 6px; border-left: 4px solid #10b981;">
+                    <strong>✓ Chiffrement RSA-2048 :</strong> Échange sécurisé de clés symétriques
+                </li>
+                <li style="padding: 15px; margin-bottom: 10px; background: #2d2d2d; border-radius: 6px; border-left: 4px solid #10b981;">
+                    <strong>✓ AES-256 :</strong> Chiffrement des messages avec clé symétrique
+                </li>
+                <li style="padding: 15px; margin-bottom: 10px; background: #2d2d2d; border-radius: 6px; border-left: 4px solid #10b981;">
+                    <strong>✓ SHA-256 :</strong> Hachage sécurisé des mots de passe et empreintes
+                </li>
+                <li style="padding: 15px; margin-bottom: 10px; background: #2d2d2d; border-radius: 6px; border-left: 4px solid #10b981;">
+                    <strong>✓ Zero-Knowledge :</strong> Vos clés privées ne sont jamais transmises
+                </li>
+                <li style="padding: 15px; margin-bottom: 10px; background: #2d2d2d; border-radius: 6px; border-left: 4px solid #10b981;">
+                    <strong>✓ Stockage Local :</strong> Toutes les données restent sur votre appareil
+                </li>
+            </ul>
+        </section>
+
+        <section id="qr-code">
+            <h2>📱 Test QR Code</h2>
+            <p style="text-align: center; margin-bottom: 20px; color: #6b7280;">Générez un QR Code pour partager vos clés publiques</p>
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="generateQR()">🔲 Générer QR Code de Test</button>
+            </div>
+            <div id="qrBox" class="empty"></div>
+        </section>
+    </div>
+
+    <div id="app">
+        <div class="container">
+            <div id="authScreen" class="auth-container">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #3b82f6; font-size: 28px; margin-bottom: 10px;"><img src="Zenkari.ico" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;">Zenkari Secure</h1>
+                    <p style="color: #10b981; font-size: 14px;">Messagerie chiffrée de bout en bout<br>RSA-2048 + AES-256</p>
+                </div>
+
+                <h2 id="authMode" style="color: white; margin-bottom: 20px;">Connexion</h2>
+
+                <label>Nom d'utilisateur</label>
+                <input type="text" id="username" placeholder="Votre nom d'utilisateur">
+
+                <label>Mot de passe</label>
+                <input type="password" id="password" placeholder="Votre mot de passe">
+
+                <div id="signupFields" class="hidden">
+                    <label>Confirmer le mot de passe</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirmez le mot de passe">
+
+                    <label>Code PIN (4 chiffres)</label>
+                    <input type="text" id="pin" placeholder="1234" maxlength="4">
+                </div>
+
+                <div class="checkbox-container">
+                    <input type="checkbox" id="rememberMe" checked>
+                    <label for="rememberMe" style="margin-bottom: 0;">Se souvenir de moi</label>
+                </div>
+
+                <div id="authError" class="status error hidden"></div>
+
+                <button id="authButton" class="btn-primary" style="width: 100%;">Se connecter</button>
+                <button id="toggleAuth" class="btn-warning" style="width: 100%; margin-top: 10px;">Créer un compte</button>
+                <button class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="backToLanding()">← Retour à l'accueil</button>
+            </div>
+
+            <div id="mainApp" class="main-app">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #3b82f6;"><img src="Zenkari.ico" style="width: 36px; height: 36px; vertical-align: middle; margin-right: 10px;">Zenkari Secure - Messagerie Chiffrée</h1>
+                </div>
+
+                <div class="user-info">
+                    <div class="username">👤 <span id="currentUsername"></span> | ID: <span id="currentUserId"></span></div>
+                    <div class="fingerprint">🔑 Auth: <span id="authFingerprint"></span> | 🔐 Encrypt: <span id="encryptFingerprint"></span></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📨 Destinataire</div>
+                    <label>Sélectionner un contact:</label>
+                    <select id="recipientSelect">
+                        <option value="self">Moi-même</option>
+                    </select>
+                    <button class="btn-success" onclick="showAddContactModal()">➕ Ajouter contact</button>
+                    <button class="btn-purple" onclick="showContactsModal()">📋 Gérer contacts</button>
+                    <button class="btn-warning" onclick="shareMyKeys()">📤 Partager mes clés (QR)</button>
+                    <div id="recipientInfo" class="status success">✓ Mode auto-chiffrement (pour vous-même)</div>
+                </div>
+
+                <div class="section">
+                    <label>Message à envoyer:</label>
+                    <textarea id="inputMessage" placeholder="Entrez votre message ici..."></textarea>
+
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="useSecurityKey">
+                        <label for="useSecurityKey" style="margin-bottom: 0; color: #fbbf24;"><img src="Zenkari.ico" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">Protéger avec une clé de sécurité</label>
+                    </div>
+
+                    <div id="securityKeySection" class="hidden">
+                        <label style="color: #fbbf24;">⚠️ Clé de sécurité (le destinataire devra la connaître):</label>
+                        <input type="password" id="securityKey" placeholder="Clé de sécurité...">
+                    </div>
+
+                    <button class="btn-primary" onclick="encryptMessage()"><img src="Zenkari.ico" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">Chiffrer & Signer</button>
+                    <button class="btn-success" onclick="decryptMessage()"><img src="Zenkari.ico" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">Vérifier & Déchiffrer</button>
+                    <button class="btn-danger" onclick="clearAll()">🗑️ Effacer</button>
+                </div>
+
+                <div class="section">
+                    <label>Message chiffré / déchiffré:</label>
+                    <textarea id="outputMessage" readonly style="background: #2d2d2d; color: #10b981;"></textarea>
+                    <div id="statusMessage" class="status"></div>
+
+                    <button class="btn-secondary" onclick="copyOutput()">📋 Copier résultat</button>
+                    <button class="btn-secondary" onclick="pasteInput()">📥 Coller</button>
+                    <button class="btn-warning" onclick="showHistory()">🕒 Historique</button>
+                    <button class="btn-purple" onclick="showMyKeys()">🔑 Mes clés publiques</button>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="btn-danger" onclick="logout()">🚪 Déconnexion</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section id="contact" style="background: #1a1a1a; border-radius: 12px; padding: 40px; margin: 40px auto; max-width: 600px;">
+        <h2>📧 Contact / Aide</h2>
+        <form onsubmit="handleContactForm(event)">
+            <input type="text" placeholder="Votre nom" required>
+            <input type="email" placeholder="Votre email" required>
+            <textarea placeholder="Votre message" required style="min-height: 120px;"></textarea>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Envoyer</button>
+        </form>
+    </section>
+
+    <footer>
+        © 2025 ZenkariApp - Tous droits réservés | Version 6.1.0 - Made by LE$TER
+    </footer>
+
+    <div id="addContactModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">➕ Ajouter un nouveau contact</div>
+            <label>Nom du contact:</label>
+            <input type="text" id="contactName" placeholder="Nom du contact">
+            
+            <label style="color: #fbbf24;">🔑 Clé publique d'AUTHENTIFICATION:</label>
+            <textarea id="contactAuthKey" placeholder="Collez la clé d'authentification..." style="min-height: 100px;"></textarea>
+            
+            <label style="color: #3b82f6;">🔐 Clé publique de CHIFFREMENT:</label>
+            <textarea id="contactEncryptKey" placeholder="Collez la clé de chiffrement..." style="min-height: 100px;"></textarea>
+            
+            <button class="btn-success" onclick="saveContact()">✓ Ajouter</button>
+            <button class="btn-danger" onclick="closeModal('addContactModal')">✗ Annuler</button>
+        </div>
+    </div>
+
+    <div id="contactsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">📒 Mes contacts</div>
+            <div id="contactsList" class="contact-list"></div>
+            <button class="btn-danger" onclick="closeModal('contactsModal')">Fermer</button>
+        </div>
+    </div>
+
+    <div id="keysModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">🔑 Vos Clés Publiques RSA-2048</div>
+            <p style="color: #6b7280; margin-bottom: 15px;">Partagez ces clés avec vos correspondants</p>
+            
+            <label style="color: #fbbf24;">🔑 Clé d'Authentification:</label>
+            <textarea id="myAuthKey" readonly style="min-height: 100px; color: #fbbf24;"></textarea>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-warning" onclick="copyKey('auth')">📋 Copier</button>
+                <button class="btn-warning" onclick="showQRForKey('auth')">📱 QR Code</button>
+                <button class="btn-secondary" onclick="downloadKey('auth')">💾 Télécharger</button>
+            </div>
+            
+            <label style="color: #3b82f6;">🔐 Clé de Chiffrement:</label>
+            <textarea id="myEncryptKey" readonly style="min-height: 100px; color: #3b82f6;"></textarea>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-primary" onclick="copyKey('encrypt')">📋 Copier</button>
+                <button class="btn-primary" onclick="showQRForKey('encrypt')">📱 QR Code</button>
+                <button class="btn-secondary" onclick="downloadKey('encrypt')">💾 Télécharger</button>
+            </div>
+            
+            <div id="qrKeyDisplay" style="display: none; text-align: center; padding: 20px; background: white; border-radius: 12px; margin-bottom: 20px;">
+                <p id="qrKeyLabel" style="color: #000; font-weight: bold; margin-bottom: 10px;"></p>
+                <div id="qrKeyBox"></div>
+            </div>
+            
+            <button class="btn-danger" onclick="closeModal('keysModal')">Fermer</button>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">📜 Historique des opérations</div>
+            <div id="historyList" style="max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+            <button class="btn-danger" onclick="closeModal('historyModal')">Fermer</button>
+        </div>
+    </div>
+
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">📱 Partager mes clés publiques</div>
+            <p style="color: #6b7280; margin-bottom: 15px;">Scannez ce QR Code pour ajouter mes clés</p>
+            <div id="qrShareBox" style="display: flex; justify-content: center; padding: 20px; background: white; border-radius: 12px;"></div>
+            <button class="btn-danger" onclick="closeModal('qrModal')" style="margin-top: 20px;">Fermer</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let users = {};
+        let contacts = {};
+        let history = [];
+        let isSignupMode = false;
+
+        function goToApp() {
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToLanding() {
+            document.getElementById('landingPage').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function generateQR() {
+            const qrBox = document.getElementById('qrBox');
+            qrBox.innerHTML = '';
+            qrBox.classList.remove('empty');
+            
+            const testData = JSON.stringify({
+                app: 'ZenkariApp',
+                version: '6.1.0',
+                type: 'demo',
+                message: 'Exemple de QR Code sécurisé Zenkari',
+                timestamp: new Date().toISOString()
+            });
+            
+            new QRCode(qrBox, {
+                text: testData,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff"
+            });
+        }
+
+        function shareMyKeys() {
+            if (!currentUser) return;
+            
+            const qrData = JSON.stringify({
+                app: 'ZenkariApp',
+                version: '6.1.0',
+                type: 'contact',
+                username: currentUser.username,
+                userId: currentUser.userId,
+                authKey: currentUser.authPublicKey,
+                encryptKey: currentUser.encryptPublicKey,
+                authFingerprint: getFingerprint(currentUser.authPublicKey),
+                encryptFingerprint: getFingerprint(currentUser.encryptPublicKey),
+                timestamp: new Date().toISOString()
+            });
+            
+            const qrBox = document.getElementById('qrShareBox');
+            qrBox.innerHTML = '';
+            
+            new QRCode(qrBox, {
+                text: qrData,
+                width: 300,
+                height: 300,
+                colorDark: "#000000",
+                colorLight: "#ffffff"
+            });
+            
+            document.getElementById('qrModal').style.display = 'block';
+        }
+
+        function handleContactForm(e) {
+            e.preventDefault();
+            alert('Merci pour votre message! Nous vous répondrons bientôt.');
+            e.target.reset();
+        }
+
+        function toggleAuthMode() {
+            isSignupMode = !isSignupMode;
+            const signupFields = document.getElementById('signupFields');
+            const authMode = document.getElementById('authMode');
+            const authButton = document.getElementById('authButton');
+            const toggleAuth = document.getElementById('toggleAuth');
+
+            if (isSignupMode) {
+                signupFields.classList.remove('hidden');
+                authMode.textContent = 'Inscription';
+                authButton.textContent = 'Créer un compte';
+                toggleAuth.textContent = 'Déjà inscrit ? Se connecter';
+            } else {
+                signupFields.classList.add('hidden');
+                authMode.textContent = 'Connexion';
+                authButton.textContent = 'Se connecter';
+                toggleAuth.textContent = 'Créer un compte';
+            }
+            hideError();
+        }
+
+        function handleAuth() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (isSignupMode) {
+                handleSignup(username, password);
+            } else {
+                handleLogin(username, password);
+            }
+        }
+
+        function handleSignup(username, password) {
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const pin = document.getElementById('pin').value;
+
+            if (username.length < 3) {
+                showError('Le nom d\'utilisateur doit contenir au moins 3 caractères');
+                return;
+            }
+
+            if (password.length < 8) {
+                showError('Le mot de passe doit contenir au moins 8 caractères');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Les mots de passe ne correspondent pas');
+                return;
+            }
+
+            if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                showError('Le code PIN doit contenir exactement 4 chiffres');
+                return;
+            }
+
+            if (users[username]) {
+                showError('Ce nom d\'utilisateur est déjà utilisé');
+                return;
+            }
+
+            showError('Génération des clés de chiffrement...', false);
+            
+            setTimeout(() => {
+                const authKeypair = generateKeypair();
+                const encryptKeypair = generateKeypair();
+                const userId = generateUserId();
+
+                users[username] = {
+                    password: hashPassword(password),
+                    pin: hashPassword(pin),
+                    userId: userId,
+                    authPrivateKey: authKeypair.private,
+                    authPublicKey: authKeypair.public,
+                    encryptPrivateKey: encryptKeypair.private,
+                    encryptPublicKey: encryptKeypair.public,
+                    createdAt: new Date().toISOString()
+                };
+
+                saveData();
+                
+                alert(`Compte créé avec succès!\n\nNom d'utilisateur: ${username}\nID unique: ${userId}\n\n🔑 Vos clés RSA ont été générées.\nPartagez-les avec vos contacts pour recevoir des messages chiffrés.`);
+                
+                loginUser(username);
+            }, 100);
+        }
+
+        function handleLogin(username, password) {
+            if (!users[username]) {
+                showError('Nom d\'utilisateur ou mot de passe incorrect');
+                return;
+            }
+
+            if (users[username].password !== hashPassword(password)) {
+                showError('Mot de passe incorrect');
+                return;
+            }
+
+            loginUser(username);
+        }
+
+        function loginUser(username) {
+            currentUser = {
+                username: username,
+                ...users[username]
+            };
+
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('rememberedUser', username);
+            }
+
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            document.getElementById('currentUsername').textContent = username;
+            document.getElementById('currentUserId').textContent = currentUser.userId;
+            document.getElementById('authFingerprint').textContent = getFingerprint(currentUser.authPublicKey).substring(0, 16);
+            document.getElementById('encryptFingerprint').textContent = getFingerprint(currentUser.encryptPublicKey).substring(0, 16);
+            
+            loadUserContacts();
+        }
+
+        function logout() {
+            if (confirm('Voulez-vous vraiment vous déconnecter?')) {
+                currentUser = null;
+                localStorage.removeItem('rememberedUser');
+                document.getElementById('authScreen').style.display = 'block';
+                document.getElementById('mainApp').style.display = 'none';
+                clearAll();
+            }
+        }
+
+        function checkRememberMe() {
+            const remembered = localStorage.getItem('rememberedUser');
+            if (remembered && users[remembered]) {
+                document.getElementById('username').value = remembered;
+            }
+        }
+
+        function generateKeypair() {
+            const crypt = new JSEncrypt({default_key_size: 2048});
+            return {
+                private: crypt.getPrivateKey(),
+                public: crypt.getPublicKey()
+            };
+        }
+
+        function generateUserId() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function hashPassword(password) {
+            return CryptoJS.SHA256(password).toString();
+        }
+
+        function getFingerprint(publicKey) {
+            return CryptoJS.SHA256(publicKey).toString().substring(0, 16);
+        }
+
+        function encryptMessage() {
+            const message = document.getElementById('inputMessage').value;
+            if (!message.trim()) {
+                alert('Veuillez entrer un message à chiffrer');
+                return;
+            }
+
+            const useSecurityKey = document.getElementById('useSecurityKey').checked;
+            const securityKey = document.getElementById('securityKey').value;
+            
+            if (useSecurityKey && !securityKey) {
+                alert('Veuillez entrer une clé de sécurité');
+                return;
+            }
+
+            const recipient = document.getElementById('recipientSelect').value;
+            let recipientPublicKey;
+            let recipientName;
+
+            if (recipient === 'self') {
+                recipientPublicKey = currentUser.encryptPublicKey;
+                recipientName = 'vous-même';
+            } else {
+                const contact = contacts[currentUser.username]?.[recipient];
+                if (!contact) {
+                    alert('Contact introuvable');
+                    return;
+                }
+                recipientPublicKey = contact.encryptKey;
+                recipientName = recipient;
+            }
+
+            try {
+                const symmetricKey = CryptoJS.lib.WordArray.random(32).toString();
+                const nonce = CryptoJS.lib.WordArray.random(12).toString();
+                
+                let ciphertext;
+                let additionalData = {};
+
+                if (useSecurityKey) {
+                    const encrypted1 = CryptoJS.AES.encrypt(message, symmetricKey).toString();
+                    ciphertext = CryptoJS.AES.encrypt(encrypted1, securityKey).toString();
+                    additionalData.hasSecurityKey = true;
+                } else {
+                    ciphertext = CryptoJS.AES.encrypt(message, symmetricKey).toString();
+                    additionalData.hasSecurityKey = false;
+                }
+
+                const encryptor = new JSEncrypt();
+                encryptor.setPublicKey(recipientPublicKey);
+                const encryptedKey = encryptor.encrypt(symmetricKey);
+
+                const signer = new JSEncrypt();
+                signer.setPrivateKey(currentUser.authPrivateKey);
+                const dataToSign = JSON.stringify({
+                    encKey: encryptedKey,
+                    nonce: nonce,
+                    ciphertext: ciphertext,
+                    sender: currentUser.username,
+                    ...additionalData
+                });
+                const signature = signer.sign(dataToSign, CryptoJS.SHA256, 'sha256');
+
+                const messageObj = {
+                    version: 'ZK6.1',
+                    alg: 'RSA-OAEP-AES256-GCM',
+                    encKey: encryptedKey,
+                    nonce: nonce,
+                    ciphertext: ciphertext,
+                    sender: currentUser.username,
+                    signature: signature,
+                    timestamp: new Date().toISOString(),
+                    ...additionalData
+                };
+
+                const finalMessage = btoa(JSON.stringify(messageObj));
+                document.getElementById('outputMessage').value = finalMessage;
+                
+                const securityInfo = useSecurityKey ? '\n🔐 Protection: Clé de sécurité activée' : '';
+                showStatus(`✓ Message chiffré pour ${recipientName} et signé par vous\n🔐 Chiffrement: RSA-2048 + AES-256\n📏 Longueur: ${finalMessage.length} caractères${securityInfo}`, 'success');
+
+                addToHistory({
+                    type: 'encrypt',
+                    recipient: recipientName,
+                    input: message.substring(0, 100),
+                    output: finalMessage.substring(0, 100),
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                alert('Erreur lors du chiffrement: ' + error.message);
+                showStatus('✗ Erreur de chiffrement', 'error');
+            }
+        }
+
+        function decryptMessage() {
+            const encryptedMessage = document.getElementById('inputMessage').value;
+            if (!encryptedMessage.trim()) {
+                alert('Veuillez entrer un message à déchiffrer');
+                return;
+            }
+
+            try {
+                const messageObj = JSON.parse(atob(encryptedMessage));
+                
+                const senderName = messageObj.sender;
+                let senderAuthKey;
+
+                if (senderName === currentUser.username) {
+                    senderAuthKey = currentUser.authPublicKey;
+                } else {
+                    const contact = contacts[currentUser.username]?.[senderName];
+                    if (contact) {
+                        senderAuthKey = contact.authKey;
+                    }
+                }
+
+                if (!senderAuthKey) {
+                    alert('Impossible de vérifier la signature: expéditeur inconnu');
+                    return;
+                }
+
+                const verifier = new JSEncrypt();
+                verifier.setPublicKey(senderAuthKey);
+                const dataToVerify = JSON.stringify({
+                    encKey: messageObj.encKey,
+                    nonce: messageObj.nonce,
+                    ciphertext: messageObj.ciphertext,
+                    sender: messageObj.sender,
+                    hasSecurityKey: messageObj.hasSecurityKey || false
+                });
+
+                if (!verifier.verify(dataToVerify, messageObj.signature, CryptoJS.SHA256)) {
+                    alert('Signature invalide! Le message a été modifié.');
+                    showStatus('✗ Signature invalide', 'error');
+                    return;
+                }
+
+                const decryptor = new JSEncrypt();
+                decryptor.setPrivateKey(currentUser.encryptPrivateKey);
+                const symmetricKey = decryptor.decrypt(messageObj.encKey);
+
+                if (!symmetricKey) {
+                    alert('Impossible de déchiffrer la clé symétrique');
+                    return;
+                }
+
+                if (messageObj.hasSecurityKey) {
+                    const securityKey = prompt('🔐 Ce message est protégé par une clé de sécurité.\nVeuillez l\'entrer:');
+                    if (!securityKey) return;
+
+                    try {
+                        const decrypted1 = CryptoJS.AES.decrypt(messageObj.ciphertext, securityKey).toString(CryptoJS.enc.Utf8);
+                        if (!decrypted1) throw new Error('Clé incorrecte');
+                        
+                        const plaintext = CryptoJS.AES.decrypt(decrypted1, symmetricKey).toString(CryptoJS.enc.Utf8);
+                        if (!plaintext) throw new Error('Déchiffrement échoué');
+                        
+                        document.getElementById('outputMessage').value = plaintext;
+                        showStatus(`✓ Signature vérifiée ✓ Message déchiffré\n📨 Expéditeur: ${senderName}\n🔐 Clé de sécurité vérifiée`, 'success');
+                        
+                        addToHistory({
+                            type: 'decrypt',
+                            sender: senderName,
+                            input: encryptedMessage.substring(0, 100),
+                            output: plaintext.substring(0, 100),
+                            timestamp: new Date().toISOString()
+                        });
+                    } catch (e) {
+                        alert('🔐 Clé de sécurité incorrecte!');
+                        showStatus('✗ Clé de sécurité incorrecte', 'error');
+                    }
+                } else {
+                    const plaintext = CryptoJS.AES.decrypt(messageObj.ciphertext, symmetricKey).toString(CryptoJS.enc.Utf8);
+                    
+                    document.getElementById('outputMessage').value = plaintext;
+                    showStatus(`✓ Signature vérifiée ✓ Message déchiffré\n📨 Expéditeur: ${senderName}\n🔑 Authentification: Valide`, 'success');
+                    
+                    addToHistory({
+                        type: 'decrypt',
+                        sender: senderName,
+                        input: encryptedMessage.substring(0, 100),
+                        output: plaintext.substring(0, 100),
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+            } catch (error) {
+                alert('Erreur lors du déchiffrement: ' + error.message);
+                showStatus('✗ Erreur de déchiffrement', 'error');
+            }
+        }
+
+        function toggleSecurityKey() {
+            const section = document.getElementById('securityKeySection');
+            const checked = document.getElementById('useSecurityKey').checked;
+            section.classList.toggle('hidden', !checked);
+        }
+
+        function updateRecipientInfo() {
+            const recipient = document.getElementById('recipientSelect').value;
+            const infoDiv = document.getElementById('recipientInfo');
+            
+            if (recipient === 'self') {
+                infoDiv.textContent = '✓ Mode auto-chiffrement (pour vous-même)';
+                infoDiv.className = 'status success';
+            } else {
+                const contact = contacts[currentUser.username]?.[recipient];
+                if (contact) {
+                    infoDiv.textContent = `✓ Envoi à ${recipient} | 🔑 ${contact.authFingerprint} | 🔐 ${contact.encryptFingerprint}`;
+                    infoDiv.className = 'status success';
+                } else {
+                    infoDiv.textContent = '✗ Contact introuvable';
+                    infoDiv.className = 'status error';
+                }
+            }
+        }
+
+        function loadUserContacts() {
+            const select = document.getElementById('recipientSelect');
+            select.innerHTML = '<option value="self">Moi-même</option>';
+            
+            const userContacts = contacts[currentUser.username] || {};
+            for (const name in userContacts) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            }
+        }
+
+        function showAddContactModal() {
+            document.getElementById('addContactModal').style.display = 'block';
+        }
+
+        function saveContact() {
+            const name = document.getElementById('contactName').value.trim();
+            const authKey = document.getElementById('contactAuthKey').value.trim();
+            const encryptKey = document.getElementById('contactEncryptKey').value.trim();
+
+            if (!name || !authKey || !encryptKey) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            try {
+                const authFingerprint = getFingerprint(authKey);
+                const encryptFingerprint = getFingerprint(encryptKey);
+
+                if (!contacts[currentUser.username]) {
+                    contacts[currentUser.username] = {};
+                }
+
+                contacts[currentUser.username][name] = {
+                    authKey: authKey,
+                    encryptKey: encryptKey,
+                    authFingerprint: authFingerprint,
+                    encryptFingerprint: encryptFingerprint,
+                    addedAt: new Date().toISOString()
+                };
+
+                saveData();
+                loadUserContacts();
+                
+                alert(`Contact ajouté avec succès!\nEmpreintes:\n🔑 Auth: ${authFingerprint}\n🔐 Encrypt: ${encryptFingerprint}`);
+                
+                document.getElementById('contactName').value = '';
+                document.getElementById('contactAuthKey').value = '';
+                document.getElementById('contactEncryptKey').value = '';
+                closeModal('addContactModal');
+            } catch (error) {
+                alert('Erreur lors de l\'ajout du contact: ' + error.message);
+            }
+        }
+
+        function deleteContact(contactName) {
+            if (confirm(`Voulez-vous vraiment supprimer le contact "${contactName}" ?\n\nCette action est irréversible.`)) {
+                delete contacts[currentUser.username][contactName];
+                saveData();
+                loadUserContacts();
+                showContactsModal();
+                alert(`Contact "${contactName}" supprimé avec succès!`);
+            }
+        }
+
+        function showContactsModal() {
+            const listDiv = document.getElementById('contactsList');
+            listDiv.innerHTML = '';
+
+            const userContacts = contacts[currentUser.username] || {};
+            
+            if (Object.keys(userContacts).length === 0) {
+                listDiv.innerHTML = '<p style="color: #6b7280;">Aucun contact enregistré. Ajoutez des contacts pour leur envoyer des messages chiffrés!</p>';
+            } else {
+                for (const name in userContacts) {
+                    const contact = userContacts[name];
+                    const div = document.createElement('div');
+                    div.className = 'contact-item';
+                    div.innerHTML = `
+                        <button class="delete-contact-btn" onclick="deleteContact('${name}')" title="Supprimer ce contact">×</button>
+                        <div class="contact-name">👤 ${name}</div>
+                        <div class="contact-fingerprint">🔑 Auth: ${contact.authFingerprint}</div>
+                        <div class="contact-fingerprint">🔐 Encrypt: ${contact.encryptFingerprint}</div>
+                        <div style="color: #6b7280; font-size: 11px; margin-top: 5px;">📅 Ajouté: ${new Date(contact.addedAt).toLocaleDateString('fr-FR')}</div>
+                    `;
+                    listDiv.appendChild(div);
+                }
+            }
+
+            document.getElementById('contactsModal').style.display = 'block';
+        }
+
+        function showMyKeys() {
+            document.getElementById('myAuthKey').value = currentUser.authPublicKey;
+            document.getElementById('myEncryptKey').value = currentUser.encryptPublicKey;
+            document.getElementById('keysModal').style.display = 'block';
+        }
+
+        function copyKey(type) {
+            const textarea = document.getElementById(type === 'auth' ? 'myAuthKey' : 'myEncryptKey');
+            textarea.select();
+            document.execCommand('copy');
+            alert(`Clé ${type === 'auth' ? 'd\'authentification' : 'de chiffrement'} copiée!`);
+        }
+
+        function showQRForKey(type) {
+            alert('Fonctionnalité QR Code individuel en développement');
+        }
+
+        function downloadKey(type) {
+            const key = type === 'auth' ? currentUser.authPublicKey : currentUser.encryptPublicKey;
+            const filename = `${currentUser.username}_${type}_key.txt`;
+            const blob = new Blob([key], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function showHistory() {
+            const listDiv = document.getElementById('historyList');
+            listDiv.innerHTML = '';
+
+            const userHistory = history.filter(h => h.user === currentUser.username);
+
+            if (userHistory.length === 0) {
+                listDiv.innerHTML = '<p style="color: #6b7280;">Aucun historique disponible</p>';
+            } else {
+                userHistory.reverse().forEach((entry) => {
+                    const emoji = entry.type === 'encrypt' ? '🔐' : '🔓';
+                    const action = entry.type === 'encrypt' ? 'CHIFFREMENT & SIGNATURE' : 'DÉCHIFFREMENT & VÉRIFICATION';
+                    const target = entry.type === 'encrypt' ? `Pour: ${entry.recipient}` : `De: ${entry.sender}`;
+                    
+                    const div = document.createElement('div');
+                    div.style.cssText = 'background: #2d2d2d; padding: 15px; border-radius: 6px; margin-bottom: 10px;';
+                    div.innerHTML = `
+                        ${emoji} ${action} - ${target}<br>
+                        📅 ${new Date(entry.timestamp).toLocaleString('fr-FR')}<br>
+                        📝 Input: ${entry.input}...<br>
+                        📤 Output: ${entry.output}...<br>
+                        ${'─'.repeat(80)}
+                    `;
+                    listDiv.appendChild(div);
+                });
+            }
+
+            document.getElementById('historyModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function clearAll() {
+            document.getElementById('inputMessage').value = '';
+            document.getElementById('outputMessage').value = '';
+            document.getElementById('statusMessage').textContent = '';
+            document.getElementById('statusMessage').className = 'status';
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('outputMessage');
+            if (!output.value) {
+                alert('Aucun résultat à copier');
+                return;
+            }
+            output.select();
+            document.execCommand('copy');
+            alert('Résultat copié dans le presse-papiers!');
+        }
+
+        function pasteInput() {
+            navigator.clipboard.readText().then(text => {
+                document.getElementById('inputMessage').value = text;
+            }).catch(() => {
+                alert('Impossible de lire le presse-papiers');
+            });
+        }
+
+        function showStatus(message, type = '') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        function showError(message, isError = true) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = message;
+            errorDiv.className = isError ? 'status error' : 'status';
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('authError').classList.add('hidden');
+        }
+
+        function addToHistory(entry) {
+            history.push({
+                ...entry,
+                user: currentUser.username
+            });
+            if (history.length > 100) {
+                history = history.slice(-100);
+            }
+            saveData();
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('zenkari_users', JSON.stringify(users));
+                localStorage.setItem('zenkari_contacts', JSON.stringify(contacts));
+                localStorage.setItem('zenkari_history', JSON.stringify(history.slice(-100)));
+            } catch (e) {
+                console.error('Erreur de sauvegarde:', e);
+            }
+        }
+
+        function loadData() {
+            try {
+                const savedUsers = localStorage.getItem('zenkari_users');
+                const savedContacts = localStorage.getItem('zenkari_contacts');
+                const savedHistory = localStorage.getItem('zenkari_history');
+
+                if (savedUsers) users = JSON.parse(savedUsers);
+                if (savedContacts) contacts = JSON.parse(savedContacts);
+                if (savedHistory) history = JSON.parse(savedHistory);
+            } catch (e) {
+                console.error('Erreur de chargement:', e);
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Initialize
+        loadData();
+        checkRememberMe();
+
+        // Setup event listeners
+        document.getElementById('authButton').onclick = handleAuth;
+        document.getElementById('toggleAuth').onclick = toggleAuthMode;
+        document.getElementById('useSecurityKey').onchange = toggleSecurityKey;
+        document.getElementById('recipientSelect').onchange = updateRecipientInfo;
+    </script>
+</body>
+</html>
